@@ -107,7 +107,9 @@ void setup()
     lcd.setCursor(0,1);
     lcd << "  Logger  v1.0";
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
+    digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
+    digitalWrite(ALERT_LED, LOW);
     
     //get tz index from RTC SRAM
     tzIndex = RTC.sramRead(TZ_INDEX_ADDR);
@@ -123,8 +125,12 @@ void setup()
     lcd.setCursor(0, 0);
     lcd << "RTC SYNC";
     if (timeStatus()!= timeSet) {
-        lcd << "FAIL";
-        while (1);
+        lcd << " FAIL";
+        digitalWrite(ALERT_LED, HIGH);
+        while (1) {
+            digitalWrite( ALERT_LED, !digitalRead(ALERT_LED));
+            delay(1000);
+        }
     }
 
     //RTC unique ID

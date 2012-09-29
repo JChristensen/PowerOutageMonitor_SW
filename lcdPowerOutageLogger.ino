@@ -6,7 +6,7 @@
  * A circuit schematic and PC board for this project is available at    *
  * https://github.com/JChristensen/PowerOutageMonitor_HW                *
  *                                                                      *
- * Jack Christensen 23Aug2012                                           *
+ * Jack Christensen 23Aug2012 v1.0                                      *
  *                                                                      *
  * The normal display is a clock showing time, date, and the number of  *
  * power outages logged in angle brackets, e.g. <4>. After a new power  *
