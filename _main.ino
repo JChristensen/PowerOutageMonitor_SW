@@ -26,9 +26,10 @@
 #define SET_BUTTON 11
 #define PHOTOCELL_PIN A2
 #define DEBOUNCE_TIME 25
-#define REPEAT_FIRST 500          //ms required before repeating on long press
+#define REPEAT_FIRST 600          //ms required before repeating on long press
 #define REPEAT_INCR 200           //repeat interval for long press
-#define LONG_PRESS 2000           //long button press, ms
+#define LONG_PRESS 1000           //long button press, ms
+#define DOUBLE_PRESS 500          //ms to detect two buttons pressed simultaneously
 #define DISP_TIMEOUT 30000        //idle timeout to return to clock display from outage display
 #define MSG_DELAY 2000            //ms to delay when displaying feedback messages
 
@@ -124,7 +125,7 @@ void setup()
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd << "RTC SYNC";
-    if (timeStatus()!= timeSet) {
+    if (timeStatus() != timeSet) {
         lcd << " FAIL";
         digitalWrite(ALERT_LED, HIGH);
         while (1) {
@@ -200,18 +201,22 @@ void loop()
             if (btnSet.wasReleased() || ms - msLastPress >= DISP_TIMEOUT) {
                 lcd.clear();
                 STATE = RUN;
-            }
-            
-            if (btnDn.wasReleased()) {
+            }            
+            else if (btnDn.wasReleased()) {
                 msLastPress = btnDn.lastChange();
                 if ( --outageNbr < 1 ) outageNbr = nOutage;
                 displayOutage(outageNbr);
             }
-            
-            if (btnUp.wasReleased()) {
+            else if (btnUp.wasReleased()) {
                 msLastPress = btnUp.lastChange();
                 if ( ++outageNbr > nOutage ) outageNbr = 1;
                 displayOutage(outageNbr);
+            }
+            else if (btnSet.pressedFor(LONG_PRESS)) {
+                logInit();
+                while (btnSet.read());                //wait for button to be released
+                STATE = RUN;
+                break;
             }
             break;
             
@@ -292,9 +297,9 @@ void loop()
     }        
 }
 
-enum {VAL_MONTH, VAL_DAY, VAL_CALIB, VAL_TZ, VAL_OTHER};
+enum {VAL_MONTH, VAL_DAY, VAL_CALIB, VAL_TZ, VAL_SEC, VAL_OTHER};
 uint8_t setType;
-enum {WAIT, INCR, DECR};
+enum {WAIT, INCR, DECR, ZERO};
 
 //prompt the user to set a value
 int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
@@ -306,6 +311,7 @@ int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
     else if (strncmp(tag, "Da", 2) == 0) setType = VAL_DAY;
     else if (strncmp(tag, "Ca", 2) == 0) setType = VAL_CALIB;
     else if (strncmp(tag, "Ti", 2) == 0) setType = VAL_TZ;
+    else if (strncmp(tag, "Se", 2) == 0) setType = VAL_SEC;
     else setType = VAL_OTHER;
 
     lcd.setCursor(0, 0);
@@ -341,6 +347,8 @@ int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
                     rpt = REPEAT_FIRST;
                 else if (btnDn.wasReleased())
                     rpt = REPEAT_FIRST;
+                else if ((setType == VAL_CALIB || setType == VAL_SEC) && btnUp.pressedFor(DOUBLE_PRESS) && btnDn.pressedFor(DOUBLE_PRESS))
+                    VAL_STATE = ZERO;
                 else if (btnUp.pressedFor(rpt)) {     //check for long press
                     rpt += REPEAT_INCR;               //increment the long press interval
                     VAL_STATE = INCR;
@@ -364,9 +372,16 @@ int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
                 lcd.setCursor(pos, 1);
                 dispVal(val);
                 break;
+    
+            case ZERO:                                //zero the value
+                val = 0;
+                VAL_STATE = WAIT;
+                lcd.setCursor(pos, 1);
+                dispVal(val);
+                while (btnUp.read() || btnDn.read()); //wait for both buttons to be released
+                break;
         }
     }
-    btnSet.read();
     return val;
 }
 
@@ -394,6 +409,7 @@ void dispVal(int val)
             lcd << tzNames[val] << "    ";
             break;
 
+        case VAL_SEC:
         case VAL_OTHER:
             printI00(lcd, val, ' ');
             break;

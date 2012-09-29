@@ -24,9 +24,12 @@
  *                                                                      *
  * (2) Press SET to begin the set sequence. Press UP and DN to adjust   *
  * each parameter, hold to adjust rapidly. Press SET to advance to the  *
- * next parameter. Hold SET to cancel the set sequence.                 *
+ * next parameter. Hold SET to cancel the set sequence. Pressing UP     *
+ * and DN simultaneously while setting either seconds or the RTC        *
+ * calibration will zero the value.                                     *
  *                                                                      *
- * (3) From clock mode, hold SET to clear the outage log.               *
+ * (3) From clock mode or while viewing the outage log,                 *
+ * hold SET to clear the outage log.                                    *
  *                                                                      *
  * This work is licensed under the Creative Commons Attribution-        *
  * ShareAlike 3.0 Unported License. To view a copy of this license,     *
