@@ -165,22 +165,19 @@ void loop()
                 STATE = SET_START;
                 break;
             }
-            
-            if (btnSet.pressedFor(LONG_PRESS)) {
+            else if (btnSet.pressedFor(LONG_PRESS)) {
                 logInit();
                 while (btnSet.read());                //wait for button to be released
                 break;
             }
-            
-            if (btnDn.wasReleased() && nOutage > 0) {
+            else if (btnDn.wasReleased() && nOutage > 0) {
                 msLastPress = btnDn.lastChange();
                 outageNbr = nOutage;
                 displayOutage(outageNbr);
                 STATE = DISP_OUTAGE;
                 break;
             }
-            
-            if (btnUp.wasReleased() && nOutage > 0) {
+            else if (btnUp.wasReleased() && nOutage > 0) {
                 msLastPress = btnUp.lastChange();
                 outageNbr = 1;
                 displayOutage(outageNbr);
