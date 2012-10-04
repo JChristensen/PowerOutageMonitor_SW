@@ -90,7 +90,7 @@ uint8_t nOutage;                 //number of outages stored in sram
 int8_t outageNbr;                //number of the displayed outage
 unsigned long ms, msLastPress;
 
-void setup()
+void setup(void)
 {
     //Serial.begin(115200);
     digitalWrite(PHOTOCELL_PIN, HIGH);      //turn on pullup resistor
@@ -104,9 +104,9 @@ void setup()
     lcd.begin(16, 2);
     lcd.clear();
     lcd.setCursor(0,0);
-    lcd << "  Power Outage";
+    lcd << F("  Power Outage");
     lcd.setCursor(0,1);
-    lcd << "  Logger  v1.0";
+    lcd << F("  Logger  v1.0");
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
@@ -124,9 +124,9 @@ void setup()
     setSyncProvider(RTC.get);
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd << "RTC SYNC";
+    lcd << F("RTC SYNC");
     if (timeStatus() != timeSet) {
-        lcd << " FAIL";
+        lcd << F(" FAIL");
         digitalWrite(ALERT_LED, HIGH);
         while (1) {
             digitalWrite( ALERT_LED, !digitalRead(ALERT_LED));
@@ -148,7 +148,7 @@ void setup()
 uint8_t STATE;                   //current state machine state
 enum {RUN, DISP_OUTAGE, SET_START, SET_TZ, SET_CALIB, SET_YR, SET_MON, SET_DAY, SET_HR, SET_MIN, SET_SEC, SET_END};    //state machine states
 
-void loop()
+void loop(void)
 {
     int yr, days;
     int calib, newCalib;
@@ -170,18 +170,16 @@ void loop()
                 while (btnSet.read());                //wait for button to be released
                 break;
             }
-            else if (btnDn.wasReleased() && nOutage > 0) {
+            else if (btnDn.wasReleased()) {
                 msLastPress = btnDn.lastChange();
                 outageNbr = nOutage;
-                displayOutage(outageNbr);
-                STATE = DISP_OUTAGE;
+                STATE = displayOutage(outageNbr);
                 break;
             }
-            else if (btnUp.wasReleased() && nOutage > 0) {
+            else if (btnUp.wasReleased()) {
                 msLastPress = btnUp.lastChange();
                 outageNbr = 1;
-                displayOutage(outageNbr);
-                STATE = DISP_OUTAGE;
+                STATE = displayOutage(outageNbr);
                 break;
             }
 
@@ -202,12 +200,12 @@ void loop()
             else if (btnDn.wasReleased()) {
                 msLastPress = btnDn.lastChange();
                 if ( --outageNbr < 1 ) outageNbr = nOutage;
-                displayOutage(outageNbr);
+                STATE = displayOutage(outageNbr);
             }
             else if (btnUp.wasReleased()) {
                 msLastPress = btnUp.lastChange();
                 if ( ++outageNbr > nOutage ) outageNbr = 1;
-                displayOutage(outageNbr);
+                STATE = displayOutage(outageNbr);
             }
             else if (btnSet.pressedFor(LONG_PRESS)) {
                 logInit();
@@ -312,7 +310,7 @@ int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
     else setType = VAL_OTHER;
 
     lcd.setCursor(0, 0);
-    lcd << "Set " << tag;
+    lcd << F("Set ") << tag;
     lcd.setCursor(pos, 1);
     dispVal(val);
 
@@ -325,7 +323,7 @@ int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
         
         if ( btnSet.pressedFor(LONG_PRESS) ) {
             lcd.clear();
-            lcd << "Set Canceled";
+            lcd << F("Set Canceled");
             while (btnSet.read());    //wait for button to be released
             delay(MSG_DELAY);
             lcd.clear();
@@ -399,11 +397,11 @@ void dispVal(int val)
             break;
         
         case VAL_CALIB:
-            lcd << _DEC(val) << "   ";
+            lcd << _DEC(val) << F("   ");
             break;
         
         case VAL_TZ:
-            lcd << tzNames[val] << "    ";
+            lcd << tzNames[val] << F("    ");
             break;
 
         case VAL_SEC:
@@ -414,13 +412,21 @@ void dispVal(int val)
     }
 }
 
-//display the given outage number, where 1 is the earliest outage
-void displayOutage(int8_t outageNbr)
+//display the given outage number, where 1 is the earliest outage.
+//returns the next state machine state (RUN if there are no outages to display).
+uint8_t displayOutage(int8_t outageNbr)
 {
     uint8_t addr;                 //outage address in sram
     time_t powerDown, powerUp;    //power outage timestamps
     
-    if (nOutage > 0 && outageNbr <= nOutage) {
+    if (nOutage == 0) {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd << F("No outages!");
+        delay(MSG_DELAY);
+        return RUN;
+    }
+    else if (outageNbr <= nOutage) {
         //find the address of the earliest outage in the log
         addr = nOutage < MAX_OUTAGES ? FIRST_OUTAGE_ADDR : RTC.sramRead(NEXT_OUTAGE_ADDR);
 
@@ -432,7 +438,7 @@ void displayOutage(int8_t outageNbr)
         powerUp = (*tz).toLocal(read32(addr + 4));
     
         lcd.setCursor(0, 0);
-        lcd << _DEC(outageNbr) << " DN ";
+        lcd << _DEC(outageNbr) << F(" DN ");
         printI00(lcd, hour(powerDown), ':');
         printI00(lcd, minute(powerDown), ' ');
         printI00(lcd, day(powerDown), ' ');
@@ -440,7 +446,7 @@ void displayOutage(int8_t outageNbr)
         lcd << monthShortStr(month(powerDown));
     
         lcd.setCursor(0, 1);
-        lcd << "  UP ";
+        lcd << F("  UP ");
         printI00(lcd, hour(powerUp), ':');
         printI00(lcd, minute(powerUp), ' ');
         printI00(lcd, day(powerUp), ' ');
@@ -448,6 +454,7 @@ void displayOutage(int8_t outageNbr)
         lcd << monthShortStr(month(powerUp));
 
         digitalWrite(ALERT_LED, LOW);        //turn the alert LED off
+        return DISP_OUTAGE;
     }
 }
 

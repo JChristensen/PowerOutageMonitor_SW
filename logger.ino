@@ -54,7 +54,7 @@ void logInit(void)
     nOutage = 0;
     digitalWrite(ALERT_LED, LOW);                       //ensure the LED is off
     lcd.clear();
-    lcd << "Log initialized";
+    lcd << F("Log initialized");
     delay(MSG_DELAY);
     lcd.clear();
 }
