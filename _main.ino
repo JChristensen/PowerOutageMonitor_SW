@@ -145,7 +145,7 @@ void setup(void)
     nOutage = logOutage();    //log an outage if one occurred
 }
 
-uint8_t STATE;                   //current state machine state
+uint8_t STATE;                //current state machine state
 enum {RUN, DISP_OUTAGE, SET_START, SET_TZ, SET_CALIB, SET_YR, SET_MON, SET_DAY, SET_HR, SET_MIN, SET_SEC, SET_END};    //state machine states
 
 void loop(void)
@@ -457,4 +457,3 @@ uint8_t displayOutage(int8_t outageNbr)
         return DISP_OUTAGE;
     }
 }
-

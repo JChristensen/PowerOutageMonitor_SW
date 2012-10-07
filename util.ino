@@ -24,15 +24,6 @@ void printI00(Print &p, int val, char delim)
     return;
 }
 
-//print date and time to Serial
-//void serialDateTime(void)
-//{
-//    Serial << endl;
-//    printTime(Serial, local);
-//    Serial << tcr -> abbrev << ' ';
-//    printDate(Serial, local);
-//}
-
 //print date, time and number of outages logged to the lcd
 void lcdDateTime(void)
 {
@@ -44,7 +35,10 @@ void lcdDateTime(void)
 
     //display the number of outages logged
     lcd.setCursor(13, 0);
-    lcd << '<' << _DEC(nOutage) << '>';
+    if (nOutage > 0)
+        lcd << '<' << _DEC(nOutage) << '>';
+    else
+        lcd << F("   ");
 }
 
 //adjust lcd brightness
@@ -55,7 +49,6 @@ void brAdjust(void)
     
     br = map(constrain(pc, 50, 550), 50, 550, 10, 1);
     analogWrite(BACKLIGHT_PIN, br * 255 / 10);
-    //Serial << "br=" << _DEC(br) << endl;
 }
 
 //Leap years are those divisible by 4, but not those divisible by 100,
@@ -65,4 +58,3 @@ boolean isLeap(int y)
 {
     return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
 }
-

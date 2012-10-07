@@ -30,7 +30,7 @@ boolean logExists(void)
     uint32_t loID;                //lower half of the unique ID read from sram
     uint8_t appID;                //app ID read from sram
 
-    RTC.idRead(rtcID.b);       //get the RTC's ID
+    RTC.idRead(rtcID.b);          //get the RTC's ID
     loID = read32(RTC_ID_LO);     //if already initialized, the lower half of the ID is stored at SRAM addr 0x00,
     appID = RTC.sramRead(APP_ID_ADDR);     //and the app ID (1) is at addr 0x04.
     return (loID == rtcID.lo) && (appID == 1);
@@ -90,4 +90,3 @@ void logClear(void)
         RTC.sramWrite(i, 0);
     }
 }
-
