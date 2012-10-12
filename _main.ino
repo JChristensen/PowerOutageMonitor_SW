@@ -36,7 +36,7 @@
 //logger definitions
 #define FIRST_OUTAGE_ADDR 0x08    //address of first outage timestamps in RTC SRAM
 #define OUTAGE_LENGTH 8           //8 data bytes for each outage (start and end timestamps, both are time_t values)
-#define MAX_OUTAGES 7             //maximum number of outage timestamp pairs that can be stored in SRAM
+#define MAX_OUTAGES 6             //maximum number of outage timestamp pairs that can be stored in SRAM
 #define MAX_OUTAGE_ADDR FIRST_OUTAGE_ADDR + OUTAGE_LENGTH * (MAX_OUTAGES - 1)    //last outage address
 #define APP_ID 1                  //APP_ID and 4 bytes of the RTC ID are stored in sram to provide
                                   //a way to recognize that the logging data structure has been initialized
@@ -167,7 +167,7 @@ void loop(void)
             }
             else if (btnSet.pressedFor(LONG_PRESS)) {
                 logInit();
-                while (btnSet.read());                //wait for button to be released
+                while (btnSet.isPressed()) btnSet.read();    //wait for button to be released
                 break;
             }
             else if (btnDn.wasReleased()) {
@@ -209,7 +209,7 @@ void loop(void)
             }
             else if (btnSet.pressedFor(LONG_PRESS)) {
                 logInit();
-                while (btnSet.read());                //wait for button to be released
+                while (btnSet.isPressed()) btnSet.read();    //wait for button to be released
                 STATE = RUN;
                 break;
             }
@@ -324,7 +324,7 @@ int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
         if ( btnSet.pressedFor(LONG_PRESS) ) {
             lcd.clear();
             lcd << F("Set Canceled");
-            while (btnSet.read());    //wait for button to be released
+            while (btnSet.isPressed()) btnSet.read();    //wait for button to be released
             delay(MSG_DELAY);
             lcd.clear();
             STATE = RUN;
@@ -373,7 +373,10 @@ int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
                 VAL_STATE = WAIT;
                 lcd.setCursor(pos, 1);
                 dispVal(val);
-                while (btnUp.read() || btnDn.read()); //wait for both buttons to be released
+                while (btnUp.isPressed() || btnDn.isPressed()) {    //wait for both buttons to be released
+                    btnUp.read();
+                    btnDn.read();
+                }
                 break;
         }
     }
