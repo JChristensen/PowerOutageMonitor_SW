@@ -3,11 +3,11 @@
 
 #include <Button.h>               //http://github.com/JChristensen/Button
 #include <LiquidCrystal.h>        //http://arduino.cc/en/Reference/LiquidCrystal (included with Arduino IDE)
-#include <MCP79412RTC.h>          //https://github.com/JChristensen/Timezone
-#include <movingAvg.h>            //https://github.com/JChristensen/movingAvg
+#include <MCP79412RTC.h>          //http://github.com/JChristensen/Timezone
+#include <movingAvg.h>            //http://github.com/JChristensen/movingAvg
 #include <Streaming.h>            //http://arduiniana.org/libraries/streaming/
 #include <Time.h>                 //http://www.arduino.cc/playground/Code/Time
-#include <Timezone.h>             //https://github.com/JChristensen/Timezone
+#include <Timezone.h>             //http://github.com/JChristensen/Timezone
 #include <Wire.h>                 //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
 
 //pin definitions and other constants
@@ -81,6 +81,7 @@ tmElements_t tmSet;
 
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 movingAvg photoCell;
+boolean pcTest;            //photocell test, display pc reading instead of TZ if true
 
 Button btnSet = Button(SET_BUTTON, true, true, DEBOUNCE_TIME);
 Button btnUp = Button(UP_BUTTON, true, true, DEBOUNCE_TIME);
@@ -111,6 +112,8 @@ void setup(void)
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
     digitalWrite(ALERT_LED, LOW);
+    btnSet.read();
+    if (btnSet.isPressed()) pcTest = true;
     
     //get tz index from RTC SRAM
     tzIndex = RTC.sramRead(TZ_INDEX_ADDR);
@@ -119,6 +122,14 @@ void setup(void)
         RTC.sramWrite(TZ_INDEX_ADDR, tzIndex);
     }
     tz = timezones[tzIndex];                                  //set the tz
+    
+    //wait for the RTC to roll over a second
+    if (!RTC.isRunning()) RTC.set(RTC.get());    //start the rtc if not running
+    lastUTC = RTC.get();
+    do {
+        delay(100);
+        utc = RTC.get();
+    } while (utc == lastUTC);
     
     //set up RTC synchronization
     setSyncProvider(RTC.get);
@@ -139,7 +150,7 @@ void setup(void)
     lcd.setCursor(0, 1);
     for (uint8_t i=0; i<8; i++) lcd << (rtcID.b[i] < 16 ? "0" : "" ) << _HEX(rtcID.b[i]);
     delay(MSG_DELAY);
-    while (btnSet.read());    //user can hold the message by holding the set button
+    do btnSet.read(); while (btnSet.isPressed()); //user can hold the message by holding the set button
     lcd.clear();
 
     nOutage = logOutage();    //log an outage if one occurred

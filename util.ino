@@ -1,3 +1,5 @@
+int pc;    //photocell reading (moving avg)
+
 //print time to Serial or lcd
 void printTime(Print &p, time_t t)
 {
@@ -27,26 +29,28 @@ void printI00(Print &p, int val, char delim)
 //print date, time and number of outages logged to the lcd
 void lcdDateTime(void)
 {
-    lcd.setCursor(0, 0);
+    lcd.setCursor(0, 0);        //time on first row
     printTime(lcd, local);
-    lcd << tcr -> abbrev;
-    lcd.setCursor(0, 1);
-    printDate(lcd, local);
-
-    //display the number of outages logged
-    lcd.setCursor(13, 0);
-    if (nOutage > 0)
-        lcd << '<' << _DEC(nOutage) << '>';
+    if (pcTest)
+        lcd << _DEC(pc);
+    else
+        lcd << tcr -> abbrev;
+    
+    if (nOutage > 0)            //followed by number of outages
+        lcd << " <" << _DEC(nOutage) << '>';
     else
         lcd << F("   ");
+    
+    lcd.setCursor(0, 1);        //date on second row
+    printDate(lcd, local);
 }
 
 //adjust lcd brightness
 void brAdjust(void)
 {
     int br;
-    int pc = photoCell.reading(analogRead(PHOTOCELL_PIN));
-    
+
+    pc = photoCell.reading(analogRead(PHOTOCELL_PIN));
     br = map(constrain(pc, 50, 550), 50, 550, 10, 1);
     analogWrite(BACKLIGHT_PIN, br * 255 / 10);
 }
