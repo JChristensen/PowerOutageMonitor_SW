@@ -46,6 +46,10 @@
 #define NEXT_OUTAGE_ADDR 0x06     //address containing pointer to next outage
 #define TZ_INDEX_ADDR 0x07        //address containing timezone index
 
+const float OFFICIAL_ZENITH = 90.83333;
+const float LAT = 42.9275;              //latitude
+const float LONG = -83.6301;            //longitude
+
 //8-byte RTC "unique ID" with access to upper and lower halves
 union {
     uint8_t b[8];
@@ -78,6 +82,7 @@ TimeChangeRule *tcr;        //pointer to the time change rule, use to get TZ abb
 time_t utc, local, lastUTC, tSet;
 const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 tmElements_t tmSet;
+uint8_t sunriseH, sunriseM, sunsetH, sunsetM;               //hour and minute for sunrise and sunset 
 
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 movingAvg photoCell;
@@ -163,6 +168,9 @@ void loop(void)
 {
     int yr, days;
     int calib, newCalib;
+    static boolean dispSunTimes;    //0=date only on second line, 1=alternate date, sunrise, sunset
+    static uint8_t dispType;        //0,1=date, 2,3=sunrise, 4,5=sunset
+    static int lastDay;             //used to know when the time has changed to a new day
 
     ms = millis();
     btnSet.read();
@@ -187,6 +195,13 @@ void loop(void)
                 STATE = displayOutage(outageNbr);
                 break;
             }
+            else if (btnDn.pressedFor(LONG_PRESS)) {
+                lcd.setCursor(0, 1);                               //second row
+                lcd << F("                ");
+                while (btnDn.isPressed()) btnDn.read();            //wait for button to be released
+                if (dispSunTimes = !dispSunTimes) dispType = 2;    //start with sunrise
+                break;
+            }
             else if (btnUp.wasReleased()) {
                 msLastPress = btnUp.lastChange();
                 outageNbr = 1;
@@ -198,8 +213,23 @@ void loop(void)
             if (utc != lastUTC) {
                 lastUTC = utc;
                 local = (*tz).toLocal(utc, &tcr);
-                lcdDateTime();
                 brAdjust();
+
+                if (day(local) != lastDay) {          //new day?
+                    lastDay = day(local);
+                    int utcOffset = tcr -> offset / 60;
+                    int ord = ordinalDate(local);
+                    calcSunset (ord, LAT, LONG, false, utcOffset, OFFICIAL_ZENITH, sunriseH, sunriseM);
+                    calcSunset (ord, LAT, LONG, true, utcOffset, OFFICIAL_ZENITH, sunsetH, sunsetM);
+                }
+
+                if (dispSunTimes) {
+                    lcdDateTime(dispType);
+                    if (++dispType > 5) dispType = 0;
+                }
+                else {
+                    lcdDateTime(0);
+                }
             }
             break;
             

@@ -27,7 +27,7 @@ void printI00(Print &p, int val, char delim)
 }
 
 //print date, time and number of outages logged to the lcd
-void lcdDateTime(void)
+void lcdDateTime(uint8_t type)
 {
     lcd.setCursor(0, 0);        //time on first row
     printTime(lcd, local);
@@ -42,7 +42,26 @@ void lcdDateTime(void)
         lcd << F("   ");
     
     lcd.setCursor(0, 1);        //date on second row
-    printDate(lcd, local);
+    switch (type / 2) {
+
+        default:            //date
+            printDate(lcd, local);
+            break;
+
+        case 1:            //sunrise
+            lcd << F("Sunrise ");
+            printI00(lcd, sunriseH, ':');
+            printI00(lcd, sunriseM, ' ');
+            lcd << F("  ");
+            break;
+            
+        case 2:            //sunset
+            lcd << F("Sunset ");
+            printI00(lcd, sunsetH, ':');
+            printI00(lcd, sunsetM, ' ');
+            lcd << F("   ");
+            break;
+    }
 }
 
 //adjust lcd brightness
