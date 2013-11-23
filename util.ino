@@ -74,11 +74,3 @@ void brAdjust(void)
     analogWrite(BACKLIGHT_PIN, br * 255 / 10);
 }
 
-//Leap years are those divisible by 4, but not those divisible by 100,
-//except that those divisble by 400 *are* leap years.
-//See Kernighan & Ritchie, 2nd edition, section 2.5.
-boolean isLeap(int y)
-{
-    return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
-}
-

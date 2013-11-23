@@ -98,7 +98,6 @@ unsigned long ms, msLastPress;
 
 void setup(void)
 {
-    //Serial.begin(115200);
     digitalWrite(PHOTOCELL_PIN, HIGH);      //turn on pullup resistor
     pinMode(ALERT_LED, OUTPUT);
     pinMode(RTC_POWER, OUTPUT);

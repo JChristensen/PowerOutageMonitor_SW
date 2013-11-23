@@ -166,3 +166,11 @@ int ordinalDate(time_t t)
     }
 }
 
+//Leap years are those divisible by 4, but not those divisible by 100,
+//except that those divisble by 400 *are* leap years.
+//See Kernighan & Ritchie, 2nd edition, section 2.5.
+boolean isLeap(time_t t)
+{
+    int y = year(t);
+    return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+}
