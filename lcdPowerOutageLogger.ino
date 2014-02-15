@@ -152,7 +152,7 @@ void setup(void)
     lcd.setCursor(0, 0);
     lcd << F("  Power Outage");
     lcd.setCursor(0, 1);
-    lcd << F("  Logger  v1.0");
+    lcd << F("  Logger  v1.1");
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
@@ -172,20 +172,27 @@ void setup(void)
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd << F("RTC SYNC");
-    lastUTC = RTC.get();
-    if ( lastUTC == 0 ) {
+    lastUTC = RTC.get();                   //try to read the time from the RTC
+    if ( lastUTC == 0 ) {                  //couldn't read it, something wrong
         lcd << F(" FAIL");
         while (1) {
             digitalWrite( ALERT_LED, !digitalRead(ALERT_LED));
             delay(1000);
         }
     }
-    isrUTC = utc = RTC.get();
-    if (!RTC.isRunning()) RTC.set(utc);    //start the rtc if not running
+    if (!RTC.isRunning()) RTC.set(lastUTC);    //start the rtc if not running
     PCMSK2 |= _BV(PCINT20);                //enable pin change interrupt 20 on PD4
     PCIFR &= ~_BV(PCIF2);                  //ensure interrupt flag is cleared
     PCICR |= _BV(PCIE2);                   //enable pin change interrupts
     RTC.squareWave(SQWAVE_1_HZ);
+
+    lastUTC = utcNow();
+    //wait for the first interrupt
+    while (lastUTC == utcNow()) delay(10);
+    utc = RTC.get();
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        isrUTC = utc;
+    }
 
     //RTC unique ID
     RTC.idRead(rtcID.b);
@@ -378,7 +385,7 @@ void loop(void)
             break;
         
         case SET_END:            
-            tSet = makeTime(tmSet);
+            tSet = (*tz).toUTC(makeTime(tmSet));
             RTC.set(tSet);
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
                 isrUTC = tSet;
