@@ -31,10 +31,10 @@
  * (3) From clock mode or while viewing the outage log,                 *
  * hold SET to clear the outage log.                                    *
  *                                                                      *
- * This work is licensed under the Creative Commons Attribution-        *
- * ShareAlike 3.0 Unported License. To view a copy of this license,     *
- * visit http://creativecommons.org/licenses/by-sa/3.0/ or send a       *
- * letter to Creative Commons, 171 Second Street, Suite 300,            *
- * San Francisco, California, 94105, USA.                               *
+ * "Power Outage Logger" by Jack Christensen is licensed under          *
+ * CC BY-SA 4.0, http://creativecommons.org/licenses/by-sa/4.0/         *
  *----------------------------------------------------------------------*/
- 
+
+//fuse settings:
+//avrdude -p m328p -U lfuse:w:0xff:m -U hfuse:w:0xde:m -U efuse:w:0x04:m -v
+
