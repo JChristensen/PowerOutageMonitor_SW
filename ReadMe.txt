@@ -6,7 +6,7 @@
  * A circuit schematic and PC board for this project is available at    *
  * https://github.com/JChristensen/PowerOutageMonitor_HW                *
  *                                                                      *
- * Jack Christensen 23Aug2012                                           *
+ * Jack Christensen 23Aug2012 v1.0                                      *
  *                                                                      *
  * The normal display is a clock showing time, date, and the number of  *
  * power outages logged in angle brackets, e.g. <4>. After a new power  *
@@ -24,14 +24,16 @@
  *                                                                      *
  * (2) Press SET to begin the set sequence. Press UP and DN to adjust   *
  * each parameter, hold to adjust rapidly. Press SET to advance to the  *
- * next parameter. Hold SET to cancel the set sequence.                 *
+ * next parameter. Hold SET to cancel the set sequence. Pressing UP     *
+ * and DN simultaneously while setting either seconds or the RTC        *
+ * calibration will zero the value.                                     *
  *                                                                      *
- * (3) From clock mode, hold SET to clear the outage log.               *
+ * (3) From clock mode or while viewing the outage log,                 *
+ * hold SET to clear the outage log.                                    *
  *                                                                      *
- * This work is licensed under the Creative Commons Attribution-        *
- * ShareAlike 3.0 Unported License. To view a copy of this license,     *
- * visit http://creativecommons.org/licenses/by-sa/3.0/ or send a       *
- * letter to Creative Commons, 171 Second Street, Suite 300,            *
- * San Francisco, California, 94105, USA.                               *
+ * "Power Outage Logger" by Jack Christensen is licensed under          *
+ * CC BY-SA 4.0, http://creativecommons.org/licenses/by-sa/4.0/         *
  *----------------------------------------------------------------------*/
- 
+
+//fuse settings:
+//avrdude -p m328p -U lfuse:w:0xff:m -U hfuse:w:0xde:m -U efuse:w:0x04:m -v
