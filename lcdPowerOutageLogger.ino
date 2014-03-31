@@ -7,6 +7,7 @@
  * https://github.com/JChristensen/PowerOutageMonitor_HW                *
  *                                                                      *
  * Jack Christensen 23Aug2012 v1.0                                      *
+ * v1.1 added sunrise/sunset, MCP980X temperature sensor.               *
  *                                                                      *
  * The normal display is a clock showing time, date, and the number of  *
  * power outages logged in angle brackets, e.g. <4>. After a new power  *
@@ -40,7 +41,8 @@
 
 #include <Button.h>               //http://github.com/JChristensen/Button
 #include <LiquidCrystal.h>        //http://arduino.cc/en/Reference/LiquidCrystal (included with Arduino IDE)
-#include <MCP79412RTC.h>          //http://github.com/JChristensen/Timezone
+#include <MCP79412RTC.h>          //http://github.com/JChristensen/MCP79412RTC
+#include <MCP980X.h>              //http://github.com/JChristensen/MCP980X
 #include <movingAvg.h>            //http://github.com/JChristensen/movingAvg
 #include <Streaming.h>            //http://arduiniana.org/libraries/streaming/
 #include <Time.h>                 //http://www.arduino.cc/playground/Code/Time
@@ -125,7 +127,7 @@ uint8_t sunriseH, sunriseM, sunsetH, sunsetM;               //hour and minute fo
 
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 movingAvg photoCell;
-boolean pcTest;            //photocell test, display pc reading instead of TZ if true
+bool pcTest;                     //photocell test, display pc reading instead of TZ if true
 
 Button btnSet = Button(SET_BUTTON, true, true, DEBOUNCE_TIME);
 Button btnUp = Button(UP_BUTTON, true, true, DEBOUNCE_TIME);
@@ -135,6 +137,9 @@ uint8_t nOutage;                 //number of outages stored in sram
 int8_t outageNbr;                //number of the displayed outage
 unsigned long ms, msLastPress;
 volatile time_t isrUTC;          //ISR's copy of UTC
+bool haveTempSensor;             //is an MCP980x temperature sensor present?
+MCP980X tempSensor(0);
+movingAvg avgTemp; 
 
 void setup(void)
 {
@@ -202,6 +207,12 @@ void setup(void)
     do btnSet.read(); while (btnSet.isPressed()); //user can hold the message by holding the set button
     lcd.clear();
 
+    Wire.beginTransmission(MCP980X_BASE_ADDR);    //check for temperature sensor
+    haveTempSensor = (Wire.endTransmission() == 0);
+    if (haveTempSensor) {                         //take an initial reading
+        avgTemp.reading( tempSensor.readTempF10(AMBIENT) );
+    }
+
     nOutage = logOutage();    //log an outage if one occurred
 }
 
@@ -229,7 +240,7 @@ void loop(void)
 {
     int yr, days;
     int calib, newCalib;
-    static boolean dispSunTimes;    //0=date only on second line, 1=alternate date, sunrise, sunset
+    static bool dispSunTimes;       //0=date only on second line, 1=alternate date, sunrise, sunset
     static uint8_t dispType;        //0,1=date, 2,3=sunrise, 4,5=sunset
     static int lastDay;             //used to know when the time has changed to a new day
 
@@ -290,6 +301,10 @@ void loop(void)
                 }
                 else {
                     lcdDateTime(0);
+                }
+                
+                if ( haveTempSensor && (second(utc) % 10 == 0) ) {    //read temperature every 10 sec
+                    avgTemp.reading( tempSensor.readTempF10(AMBIENT) );
                 }
             }
             break;

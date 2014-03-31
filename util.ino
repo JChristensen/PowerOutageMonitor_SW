@@ -31,15 +31,18 @@ void lcdDateTime(uint8_t type)
 {
     lcd.setCursor(0, 0);        //time on first row
     printTime(lcd, local);
-    if (pcTest)
-        lcd << _DEC(pc);
-    else
-        lcd << tcr -> abbrev;
+    if (pcTest) lcd << _DEC(pc);
+    else lcd << tcr -> abbrev;
     
-    if (nOutage > 0)            //followed by number of outages
+    if (nOutage > 0) {          //followed by number of outages
         lcd << " <" << _DEC(nOutage) << '>';
-    else
-        lcd << F("   ");
+    }
+    else if (haveTempSensor) {
+        int t = avgTemp.getAvg();
+        t = (t + 5) / 10;
+        lcd << ' ' << t << '\xDF';
+    }
+    else lcd << F("   ");
     
     lcd.setCursor(0, 1);        //date on second row
     switch (type / 2) {
@@ -67,10 +70,8 @@ void lcdDateTime(uint8_t type)
 //adjust lcd brightness
 void brAdjust(void)
 {
-    int br;
-
     pc = photoCell.reading(analogRead(PHOTOCELL_PIN));
-    br = map(constrain(pc, 50, 550), 50, 550, 10, 1);
+    int br = map(constrain(pc, 50, 550), 50, 550, 10, 1);
     analogWrite(BACKLIGHT_PIN, br * 255 / 10);
 }
 

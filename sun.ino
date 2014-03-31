@@ -76,7 +76,7 @@ float rad2deg (float radians)
     return radians / ( pi / 180 );
 }
 
-void calcSunset(int n, float lat, float lon, boolean sunset, float GMToffset, float zenith,
+void calcSunset(int n, float lat, float lon, bool sunset, float GMToffset, float zenith,
 byte &hour, byte &minutes)
 {
     hour = minutes = 0;
@@ -169,7 +169,7 @@ int ordinalDate(time_t t)
 //Leap years are those divisible by 4, but not those divisible by 100,
 //except that those divisble by 400 *are* leap years.
 //See Kernighan & Ritchie, 2nd edition, section 2.5.
-boolean isLeap(time_t t)
+bool isLeap(time_t t)
 {
     int y = year(t);
     return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;

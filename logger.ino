@@ -25,7 +25,7 @@ time_t powerDown, powerUp;    //power outage timestamps
 }
 
 //test whether the log structure is already set up
-boolean logExists(void)
+bool logExists(void)
 {
     uint32_t loID;                //lower half of the unique ID read from sram
     uint8_t appID;                //app ID read from sram
