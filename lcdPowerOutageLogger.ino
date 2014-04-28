@@ -185,7 +185,8 @@ void setup(void)
             delay(1000);
         }
     }
-    if (!RTC.isRunning()) RTC.set(lastUTC);    //start the rtc if not running
+    if (!RTC.isRunning()) RTC.set(lastUTC);        //start the rtc if not running
+    RTC.calibWrite( (int8_t)RTC.eepromRead(127) ); //set calibration register from stored value    
     PCMSK2 |= _BV(PCINT20);                //enable pin change interrupt 20 on PD4
     PCIFR &= ~_BV(PCIF2);                  //ensure interrupt flag is cleared
     PCICR |= _BV(PCIE2);                   //enable pin change interrupts
@@ -203,6 +204,10 @@ void setup(void)
     RTC.idRead(rtcID.b);
     lcd.setCursor(0, 1);
     for (uint8_t i=0; i<8; i++) lcd << (rtcID.b[i] < 16 ? "0" : "" ) << _HEX(rtcID.b[i]);
+    delay(MSG_DELAY);
+    do btnSet.read(); while (btnSet.isPressed()); //user can hold the message by holding the set button
+    lcd.clear();
+    lcd << F("Calibration ") << RTC.calibRead();
     delay(MSG_DELAY);
     do btnSet.read(); while (btnSet.isPressed()); //user can hold the message by holding the set button
     lcd.clear();
