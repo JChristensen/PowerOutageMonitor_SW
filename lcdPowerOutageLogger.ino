@@ -36,7 +36,7 @@
  * CC BY-SA 4.0, http://creativecommons.org/licenses/by-sa/4.0/         *
  *----------------------------------------------------------------------*/
 
-//fuse settings:
+//fuse settings, same as Uno except 4.3V BOD:
 //avrdude -p m328p -U lfuse:w:0xff:m -U hfuse:w:0xde:m -U efuse:w:0x04:m -v
 
 #include <Button.h>               //http://github.com/JChristensen/Button
