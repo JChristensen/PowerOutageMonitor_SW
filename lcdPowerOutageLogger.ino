@@ -39,7 +39,7 @@
 //fuse settings, same as Uno except 4.3V BOD:
 //avrdude -p m328p -U lfuse:w:0xff:m -U hfuse:w:0xde:m -U efuse:w:0x04:m -v
 
-#include <Button.h>               //http://github.com/JChristensen/Button
+#include <JC_Button.h>            //http://github.com/JChristensen/JC_Button
 #include <LiquidCrystal.h>        //http://arduino.cc/en/Reference/LiquidCrystal (included with Arduino IDE)
 #include <MCP79412RTC.h>          //http://github.com/JChristensen/MCP79412RTC
 #include <MCP980X.h>              //http://github.com/JChristensen/MCP980X
@@ -66,7 +66,6 @@
 #define UP_BUTTON 10
 #define SET_BUTTON 11
 #define PHOTOCELL_PIN A2
-#define DEBOUNCE_TIME 25
 #define REPEAT_FIRST 600          //ms required before repeating on long press
 #define REPEAT_INCR 200           //repeat interval for long press
 #define LONG_PRESS 1000           //long button press, ms
@@ -118,7 +117,7 @@ Timezone UTC(utcRule, utcRule);
 Timezone *timezones[] = { &Eastern, &Central, &Mountain, &Pacific, &UTC };
 Timezone *tz;               //pointer to the time zone
 uint8_t tzIndex;            //index to the timezones[] array (persisted in RTC SRAM)
-char *tzNames[] = { "Eastern", "Central", "Mountain", "Pacific", "UTC  " };
+const char *tzNames[] = { "Eastern", "Central", "Mountain", "Pacific", "UTC  " };
 TimeChangeRule *tcr;        //pointer to the time change rule, use to get TZ abbrev
 time_t utc, local, lastUTC, tSet;
 const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
@@ -126,12 +125,12 @@ tmElements_t tmSet;
 uint8_t sunriseH, sunriseM, sunsetH, sunsetM;               //hour and minute for sunrise and sunset 
 
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
-movingAvg photoCell;
+movingAvg photoCell(6);
 bool pcTest;                     //photocell test, display pc reading instead of TZ if true
 
-Button btnSet = Button(SET_BUTTON, true, true, DEBOUNCE_TIME);
-Button btnUp = Button(UP_BUTTON, true, true, DEBOUNCE_TIME);
-Button btnDn = Button(DN_BUTTON, true, true, DEBOUNCE_TIME);
+Button btnSet = Button(SET_BUTTON);
+Button btnUp = Button(UP_BUTTON);
+Button btnDn = Button(DN_BUTTON);
 
 uint8_t nOutage;                 //number of outages stored in sram
 int8_t outageNbr;                //number of the displayed outage
@@ -139,9 +138,9 @@ unsigned long ms, msLastPress;
 volatile time_t isrUTC;          //ISR's copy of UTC
 bool haveTempSensor;             //is an MCP980x temperature sensor present?
 MCP980X tempSensor(0);
-movingAvg avgTemp; 
+movingAvg avgTemp(6); 
 
-void setup(void)
+void setup()
 {
     pinMode(RTC_INTERRUPT, INPUT_PULLUP);
     pinMode(PHOTOCELL_PIN, INPUT_PULLUP);
@@ -150,6 +149,11 @@ void setup(void)
     delay(100);
     digitalWrite(RTC_POWER, HIGH);
     delay(100);
+    btnSet.begin();
+    btnUp.begin();
+    btnDn.begin();
+    photoCell.begin();
+    avgTemp.begin();
     
     //splash screen
     lcd.begin(16, 2);
@@ -228,7 +232,7 @@ ISR(PCINT2_vect)
     }
 }
 
-time_t utcNow(void)
+time_t utcNow()
 {
     time_t t;
     
@@ -241,7 +245,7 @@ time_t utcNow(void)
 uint8_t STATE;                //current state machine state
 enum {RUN, DISP_OUTAGE, SET_START, SET_TZ, SET_CALIB, SET_YR, SET_MON, SET_DAY, SET_HR, SET_MIN, SET_SEC, SET_END};    //state machine states
 
-void loop(void)
+void loop()
 {
     int yr, days;
     int calib, newCalib;
@@ -276,7 +280,7 @@ void loop(void)
                 lcd.setCursor(0, 1);                               //second row
                 lcd << F("                ");
                 while (btnDn.isPressed()) btnDn.read();            //wait for button to be released
-                if (dispSunTimes = !dispSunTimes) dispType = 2;    //start with sunrise
+                if ((dispSunTimes = !dispSunTimes)) dispType = 2;  //start with sunrise
                 break;
             }
             else if (btnUp.wasReleased()) {
@@ -421,7 +425,7 @@ uint8_t setType;
 enum {WAIT, INCR, DECR, ZERO};
 
 //prompt the user to set a value
-int setVal(char *tag, int val, int minVal, int maxVal, uint8_t pos)
+int setVal(const char *tag, int val, int minVal, int maxVal, uint8_t pos)
 {
     uint8_t VAL_STATE;
     unsigned long rpt = REPEAT_FIRST;
@@ -582,5 +586,8 @@ uint8_t displayOutage(int8_t outageNbr)
 
         digitalWrite(ALERT_LED, LOW);        //turn the alert LED off
         return DISP_OUTAGE;
+    }
+    else {
+        return RUN;
     }
 }

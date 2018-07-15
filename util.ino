@@ -68,7 +68,7 @@ void lcdDateTime(uint8_t type)
 }
 
 //adjust lcd brightness
-void brAdjust(void)
+void brAdjust()
 {
     pc = photoCell.reading(analogRead(PHOTOCELL_PIN));
     int br = map(constrain(pc, 50, 550), 50, 550, 10, 1);

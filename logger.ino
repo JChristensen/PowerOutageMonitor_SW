@@ -1,10 +1,9 @@
 //log a new outage if one occurred.
 //initializes the log data structure in the RTC SRAM if needed.
-uint8_t logOutage(void)
+uint8_t logOutage()
 {
 uint8_t nOutage;              //number of outages stored in sram
 uint8_t nextOutage;           //address of next outage timestamps in sram
-uint8_t outageAddr;           //outage address in sram
 time_t powerDown, powerUp;    //power outage timestamps
 
     if (!logExists()) logInit();
@@ -25,7 +24,7 @@ time_t powerDown, powerUp;    //power outage timestamps
 }
 
 //test whether the log structure is already set up
-bool logExists(void)
+bool logExists()
 {
     uint32_t loID;                //lower half of the unique ID read from sram
     uint8_t appID;                //app ID read from sram
@@ -37,7 +36,7 @@ bool logExists(void)
 }
 
 //initialize the log structure
-void logInit(void)
+void logInit()
 {
     RTC.idRead(rtcID.b);                                //get the RTC's ID
     write32(RTC_ID_LO, rtcID.lo);                       //least significant half of the RTC unique ID
@@ -84,7 +83,7 @@ time_t read32(uint8_t addr)
 }
 
 //destroy the logging data structure and log data
-void logClear(void)
+void logClear()
 {
     for (uint8_t i=0; i<MAX_OUTAGE_ADDR + OUTAGE_LENGTH; i++) {
         RTC.sramWrite(i, 0);
