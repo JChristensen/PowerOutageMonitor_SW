@@ -42,7 +42,7 @@
 #include <JC_Button.h>            //http://github.com/JChristensen/JC_Button
 #include <LiquidCrystal.h>        //http://arduino.cc/en/Reference/LiquidCrystal (included with Arduino IDE)
 #include <MCP79412RTC.h>          //http://github.com/JChristensen/MCP79412RTC
-#include <MCP980X.h>              //http://github.com/JChristensen/MCP980X
+#include <MCP9800.h>              //http://github.com/JChristensen/MCP9800
 #include <movingAvg.h>            //http://github.com/JChristensen/movingAvg
 #include <Streaming.h>            //http://arduiniana.org/libraries/streaming/
 #include <Time.h>                 //http://www.arduino.cc/playground/Code/Time
@@ -137,7 +137,7 @@ int8_t outageNbr;                //number of the displayed outage
 unsigned long ms, msLastPress;
 volatile time_t isrUTC;          //ISR's copy of UTC
 bool haveTempSensor;             //is an MCP980x temperature sensor present?
-MCP980X tempSensor(0);
+MCP9800 tempSensor(0);
 movingAvg avgTemp(6); 
 
 void setup()
@@ -161,7 +161,7 @@ void setup()
     lcd.setCursor(0, 0);
     lcd << F(" Power Outage");
     lcd.setCursor(0, 1);
-    lcd << F(" Logger v1.2.0");
+    lcd << F(" Logger v1.2.1");
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
@@ -216,7 +216,7 @@ void setup()
     do btnSet.read(); while (btnSet.isPressed()); //user can hold the message by holding the set button
     lcd.clear();
 
-    Wire.beginTransmission(MCP980X_BASE_ADDR);    //check for temperature sensor
+    Wire.beginTransmission(MCP9800_BASE_ADDR);    //check for temperature sensor
     haveTempSensor = (Wire.endTransmission() == 0);
     if (haveTempSensor) {                         //take an initial reading
         avgTemp.reading( tempSensor.readTempF10(AMBIENT) );
