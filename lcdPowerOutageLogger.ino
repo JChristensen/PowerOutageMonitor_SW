@@ -159,9 +159,9 @@ void setup()
     lcd.begin(16, 2);
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd << F("  Power Outage");
+    lcd << F(" Power Outage");
     lcd.setCursor(0, 1);
-    lcd << F("  Logger  v1.1");
+    lcd << F(" Logger v1.2.0");
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
