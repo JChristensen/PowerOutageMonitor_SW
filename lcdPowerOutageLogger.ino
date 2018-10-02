@@ -161,7 +161,7 @@ void setup()
     lcd.setCursor(0, 0);
     lcd << F(" Power Outage");
     lcd.setCursor(0, 1);
-    lcd << F(" Logger v1.2.1");
+    lcd << F(" Logger v1.2.2");
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
@@ -189,8 +189,14 @@ void setup()
             delay(1000);
         }
     }
-    if (!RTC.isRunning()) RTC.set(lastUTC);        //start the rtc if not running
-    RTC.calibWrite( (int8_t)RTC.eepromRead(127) ); //set calibration register from stored value    
+    if (!RTC.isRunning()) RTC.set(lastUTC);         //start the rtc if not running
+    bool calFromEEPROM(false);                      //flag to indicate calibration value from EEPROM was used
+    //check for signature indicating calibration value present
+    if (RTC.eepromRead(125) == 0xAA && RTC.eepromRead(126) == 0x55)
+    {
+        calFromEEPROM = true;
+        RTC.calibWrite( (int8_t)RTC.eepromRead(127) );  //set calibration register from stored value    
+    }
     PCMSK2 |= _BV(PCINT20);                //enable pin change interrupt 20 on PD4
     PCIFR &= ~_BV(PCIF2);                  //ensure interrupt flag is cleared
     PCICR |= _BV(PCIE2);                   //enable pin change interrupts
@@ -212,6 +218,11 @@ void setup()
     do btnSet.read(); while (btnSet.isPressed()); //user can hold the message by holding the set button
     lcd.clear();
     lcd << F("Calibration ") << RTC.calibRead();
+    if (calFromEEPROM)
+    {
+        lcd.setCursor(0, 1);
+        lcd << F("Set from EEPROM");
+    }
     delay(MSG_DELAY);
     do btnSet.read(); while (btnSet.isPressed()); //user can hold the message by holding the set button
     lcd.clear();
