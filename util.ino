@@ -1,3 +1,8 @@
+// Arduino Power Outage Logger
+// https://github.com/JChristensen/PowerOutageMonitor_SW
+// Copyright (C) 2019 by Jack Christensen and licensed under
+// GNU GPL v3.0, https://www.gnu.org/licenses/gpl.html
+
 int pc;    //photocell reading (moving avg)
 
 //print time to Serial or lcd
@@ -33,7 +38,7 @@ void lcdDateTime(uint8_t type)
     printTime(lcd, local);
     if (pcTest) lcd << _DEC(pc);
     else lcd << tcr -> abbrev;
-    
+
     if (nOutage > 0) {          //followed by number of outages
         lcd << " <" << _DEC(nOutage) << '>';
     }
@@ -43,7 +48,7 @@ void lcdDateTime(uint8_t type)
         lcd << ' ' << t << '\xDF';
     }
     else lcd << F("   ");
-    
+
     lcd.setCursor(0, 1);        //date on second row
     switch (type / 2) {
 
@@ -57,7 +62,7 @@ void lcdDateTime(uint8_t type)
             printI00(lcd, sunriseM, ' ');
             lcd << F("  ");
             break;
-            
+
         case 2:            //sunset
             lcd << F("Sunset ");
             printI00(lcd, sunsetH, ':');

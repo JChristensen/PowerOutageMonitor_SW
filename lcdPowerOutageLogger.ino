@@ -1,43 +1,7 @@
-/*----------------------------------------------------------------------*
- * Arduino sketch to implement a Power Outage Logger using the          *
- * Microchip MCP79412 RTC. Logs up to 7 outages (power down/up times)   *
- * in the RTC's SRAM.                                                   *
- *                                                                      *
- * A circuit schematic and PC board for this project is available at    *
- * https://github.com/JChristensen/PowerOutageMonitor_HW                *
- *                                                                      *
- * Jack Christensen 23Aug2012 v1.0                                      *
- * v1.1 added sunrise/sunset, MCP980X temperature sensor.               *
- *                                                                      *
- * The normal display is a clock showing time, date, and the number of  *
- * power outages logged in angle brackets, e.g. <4>. After a new power  *
- * outage, the alert LED is illuminated. Viewing the outage log turns   *
- * the LED off. The clock adjusts automatically for daylight saving     *
- * time.                                                                *
- *                                                                      *
- * From the clock display:                                              *
- *                                                                      *
- * (1) Press UP or DN to view the outage log. Pressing UP will show     *
- * the first (earliest) outage, pressing UP again will show the next    *
- * outage. Pressing DN will show last (most recent) outage, pressing    *
- * DN again will show the previous outage. Press SET to return to clock *
- * mode, or it will automatically return after 30 seconds.              *
- *                                                                      *
- * (2) Press SET to begin the set sequence. Press UP and DN to adjust   *
- * each parameter, hold to adjust rapidly. Press SET to advance to the  *
- * next parameter. Hold SET to cancel the set sequence. Pressing UP     *
- * and DN simultaneously while setting either seconds or the RTC        *
- * calibration will zero the value.                                     *
- *                                                                      *
- * (3) From clock mode or while viewing the outage log,                 *
- * hold SET to clear the outage log.                                    *
- *                                                                      *
- * "Power Outage Logger" by Jack Christensen is licensed under          *
- * CC BY-SA 4.0, http://creativecommons.org/licenses/by-sa/4.0/         *
- *----------------------------------------------------------------------*/
-
-//fuse settings, same as Uno except 4.3V BOD:
-//avrdude -p m328p -U lfuse:w:0xff:m -U hfuse:w:0xde:m -U efuse:w:0x04:m -v
+// Arduino Power Outage Logger
+// https://github.com/JChristensen/PowerOutageMonitor_SW
+// Copyright (C) 2019 by Jack Christensen and licensed under
+// GNU GPL v3.0, https://www.gnu.org/licenses/gpl.html
 
 #include <JC_Button.h>            //http://github.com/JChristensen/JC_Button
 #include <LiquidCrystal.h>        //http://arduino.cc/en/Reference/LiquidCrystal (included with Arduino IDE)
@@ -122,7 +86,7 @@ TimeChangeRule *tcr;        //pointer to the time change rule, use to get TZ abb
 time_t utc, local, lastUTC, tSet;
 const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 tmElements_t tmSet;
-uint8_t sunriseH, sunriseM, sunsetH, sunsetM;               //hour and minute for sunrise and sunset 
+uint8_t sunriseH, sunriseM, sunsetH, sunsetM;               //hour and minute for sunrise and sunset
 
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 movingAvg photoCell(6);
@@ -138,7 +102,7 @@ unsigned long ms, msLastPress;
 volatile time_t isrUTC;          //ISR's copy of UTC
 bool haveTempSensor;             //is an MCP980x temperature sensor present?
 MCP9800 tempSensor(0);
-movingAvg avgTemp(6); 
+movingAvg avgTemp(6);
 
 void setup()
 {
@@ -154,21 +118,21 @@ void setup()
     btnDn.begin();
     photoCell.begin();
     avgTemp.begin();
-    
+
     //splash screen
     lcd.begin(16, 2);
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd << F(" Power Outage");
     lcd.setCursor(0, 1);
-    lcd << F(" Logger v1.2.2");
+    lcd << F(" Logger v1.2.3");
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
     digitalWrite(ALERT_LED, LOW);
     btnSet.read();
     if (btnSet.isPressed()) pcTest = true;
-    
+
     //get tz index from RTC SRAM
     tzIndex = RTC.sramRead(TZ_INDEX_ADDR);
     if ( tzIndex >= sizeof(tzNames)/sizeof(tzNames[0]) ) {    //valid value?
@@ -176,7 +140,7 @@ void setup()
         RTC.sramWrite(TZ_INDEX_ADDR, tzIndex);
     }
     tz = timezones[tzIndex];                                  //set the tz
-    
+
     //set up RTC synchronization
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -195,7 +159,7 @@ void setup()
     if (RTC.eepromRead(125) == 0xAA && RTC.eepromRead(126) == 0x55)
     {
         calFromEEPROM = true;
-        RTC.calibWrite( (int8_t)RTC.eepromRead(127) );  //set calibration register from stored value    
+        RTC.calibWrite( (int8_t)RTC.eepromRead(127) );  //set calibration register from stored value
     }
     PCMSK2 |= _BV(PCINT20);                //enable pin change interrupt 20 on PD4
     PCIFR &= ~_BV(PCIF2);                  //ensure interrupt flag is cleared
@@ -246,7 +210,7 @@ ISR(PCINT2_vect)
 time_t utcNow()
 {
     time_t t;
-    
+
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         t = isrUTC;
     }
@@ -268,9 +232,9 @@ void loop()
     btnSet.read();
     btnUp.read();
     btnDn.read();
-    
+
     switch (STATE) {
-        
+
         case RUN:
             if (btnSet.wasReleased()) {
                 STATE = SET_START;
@@ -322,18 +286,18 @@ void loop()
                 else {
                     lcdDateTime(0);
                 }
-                
+
                 if ( haveTempSensor && (second(utc) % 10 == 0) ) {    //read temperature every 10 sec
                     avgTemp.reading( tempSensor.readTempF10(AMBIENT) );
                 }
             }
             break;
-            
+
         case DISP_OUTAGE:
             if (btnSet.wasReleased() || ms - msLastPress >= DISP_TIMEOUT) {
                 lcd.clear();
                 STATE = RUN;
-            }            
+            }
             else if (btnDn.wasReleased()) {
                 msLastPress = btnDn.lastChange();
                 if ( --outageNbr < 1 ) outageNbr = nOutage;
@@ -351,12 +315,12 @@ void loop()
                 break;
             }
             break;
-            
+
         case SET_START:
             lcd.clear();
             STATE = SET_TZ;
             break;
-            
+
         case SET_TZ:
             STATE = SET_CALIB;
             tzIndex = setVal("Timezone: ", tzIndex, 0, sizeof(tzNames)/sizeof(tzNames[0]) - 1, 0);
@@ -364,7 +328,7 @@ void loop()
             tz = timezones[tzIndex];
             RTC.sramWrite(TZ_INDEX_ADDR, tzIndex);    //save it
             break;
-            
+
         case SET_CALIB:
             STATE = SET_YR;
             lcd.clear();
@@ -381,13 +345,13 @@ void loop()
             if (STATE == RUN) break;
             tmSet.Year = CalendarYrToTm(yr);
             break;
-        
+
         case SET_MON:
             STATE = SET_DAY;
             tmSet.Month = setVal("Month:", month(local), 1, 12, 5);
             if (STATE == RUN) break;
             break;
-        
+
         case SET_DAY:
             STATE = SET_HR;
             days = monthDays[tmSet.Month - 1];
@@ -395,7 +359,7 @@ void loop()
             tmSet.Day = setVal("Day:  ", day(local), 1, days, 9);
             if (STATE == RUN) break;
             break;
-        
+
         case SET_HR:
             STATE = SET_MIN;
             lcd.clear();
@@ -404,7 +368,7 @@ void loop()
             lcd.setCursor(2, 1);
             lcd << ':';
             break;
-        
+
         case SET_MIN:
             STATE = SET_SEC;
             tmSet.Minute = setVal("Minute: ", minute((*tz).toLocal(utcNow())), 0, 59, 3);
@@ -412,14 +376,14 @@ void loop()
             lcd.setCursor(5, 1);
             lcd << ':';
             break;
-        
+
         case SET_SEC:
             STATE = SET_END;
             tmSet.Second = setVal("Second: ", second((*tz).toLocal(utcNow())), 0, 59, 6);
             if (STATE == RUN) break;
             break;
-        
-        case SET_END:            
+
+        case SET_END:
             tSet = (*tz).toUTC(makeTime(tmSet));
             RTC.set(tSet);
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
@@ -428,7 +392,7 @@ void loop()
             STATE = RUN;
             lcd.clear();
             break;
-    }        
+    }
 }
 
 enum {VAL_MONTH, VAL_DAY, VAL_CALIB, VAL_TZ, VAL_SEC, VAL_OTHER};
@@ -440,7 +404,7 @@ int setVal(const char *tag, int val, int minVal, int maxVal, uint8_t pos)
 {
     uint8_t VAL_STATE;
     unsigned long rpt = REPEAT_FIRST;
-    
+
     if (strncmp(tag, "Mo", 2) == 0) setType = VAL_MONTH;
     else if (strncmp(tag, "Da", 2) == 0) setType = VAL_DAY;
     else if (strncmp(tag, "Ca", 2) == 0) setType = VAL_CALIB;
@@ -459,7 +423,7 @@ int setVal(const char *tag, int val, int minVal, int maxVal, uint8_t pos)
         btnSet.read();
         btnUp.read();
         btnDn.read();
-        
+
         if ( btnSet.pressedFor(LONG_PRESS) ) {
             lcd.clear();
             lcd << F("Set Canceled");
@@ -471,7 +435,7 @@ int setVal(const char *tag, int val, int minVal, int maxVal, uint8_t pos)
         }
 
         switch (VAL_STATE) {
-            
+
             case WAIT:                                //wait for a button event
                 if (btnUp.wasPressed())
                     VAL_STATE = INCR;
@@ -492,21 +456,21 @@ int setVal(const char *tag, int val, int minVal, int maxVal, uint8_t pos)
                     VAL_STATE = DECR;
                 }
                 break;
-    
+
             case INCR:                                //increment the counter
                 if (++val > maxVal) val = minVal;     //wrap if max exceeded
                 VAL_STATE = WAIT;
                 lcd.setCursor(pos, 1);
                 dispVal(val);
                 break;
-    
+
             case DECR:                                //decrement the counter
                 if (--val < minVal) val = maxVal;     //wrap if min exceeded
                 VAL_STATE = WAIT;
                 lcd.setCursor(pos, 1);
                 dispVal(val);
                 break;
-    
+
             case ZERO:                                //zero the value
                 val = 0;
                 VAL_STATE = WAIT;
@@ -526,22 +490,22 @@ int setVal(const char *tag, int val, int minVal, int maxVal, uint8_t pos)
 void dispVal(int val)
 {
     switch (setType) {
-        
+
         case VAL_MONTH:
             lcd << monthShortStr(val);
             break;
-        
+
         case VAL_DAY:
             tmSet.Day = val;
-            tSet = makeTime(tmSet);        
+            tSet = makeTime(tmSet);
             printI00(lcd, val, ' ');
             lcd << dayShortStr(weekday(tSet));
             break;
-        
+
         case VAL_CALIB:
             lcd << _DEC(val) << F("   ");
             break;
-        
+
         case VAL_TZ:
             lcd << tzNames[val] << F("    ");
             break;
@@ -550,7 +514,7 @@ void dispVal(int val)
         case VAL_OTHER:
             printI00(lcd, val, ' ');
             break;
-    
+
     }
 }
 
@@ -560,7 +524,7 @@ uint8_t displayOutage(int8_t outageNbr)
 {
     uint8_t addr;                 //outage address in sram
     time_t powerDown, powerUp;    //power outage timestamps
-    
+
     if (nOutage == 0) {
         lcd.clear();
         lcd.setCursor(0, 0);
@@ -574,11 +538,11 @@ uint8_t displayOutage(int8_t outageNbr)
 
         //calculate the address of outage "n"
         addr = ((addr - FIRST_OUTAGE_ADDR + (outageNbr - 1) * OUTAGE_LENGTH) % (MAX_OUTAGES * OUTAGE_LENGTH)) + FIRST_OUTAGE_ADDR;
-    
+
         lcd.clear();
         powerDown = (*tz).toLocal(read32(addr));
         powerUp = (*tz).toLocal(read32(addr + 4));
-    
+
         lcd.setCursor(0, 0);
         lcd << _DEC(outageNbr) << F(" DN ");
         printI00(lcd, hour(powerDown), ':');
@@ -586,7 +550,7 @@ uint8_t displayOutage(int8_t outageNbr)
         printI00(lcd, day(powerDown), ' ');
         lcd.setCursor(13, 0);
         lcd << monthShortStr(month(powerDown));
-    
+
         lcd.setCursor(0, 1);
         lcd << F("  UP ");
         printI00(lcd, hour(powerUp), ':');

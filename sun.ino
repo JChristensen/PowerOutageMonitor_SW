@@ -1,25 +1,26 @@
-/*----------------------------------------------------------------------*
- * This is an implementation of the Sunrise/Sunset Algorithm found at   *
- * http://williams.best.vwh.net/sunrise_sunset_algorithm.htm            *
- * from the Almanac for Computers, 1990                                 *
- * Published by Nautical Almanac Office                                 *
- * Washington, DC 20392                                                 *
- * Implemented by Chris Snyder                                          *
- * Modified 09Dec2011 by Jack Christensen                               *
- *  - Improved rounding of the returned hour and minute values          *
- *    (e.g. would sometimes return 16h60m rather than 17h0m)            *
- *  - Replaced dayNumber() function with ordinalDate() and isLeap().    *
- *    (dayNumber returned zero as the first day for non-leap years.)    *
- *                                                                      *
- *    These changes resulted in better agreement with the US Naval      *
- *    Observatory calculations,                                         *
- *    http://aa.usno.navy.mil/data/docs/RS_OneYear.php                  *
- *                                                                      *
- *    For 2011, for my locale, W083°37', N42°56', all sunrise and       *
- *    sunset times agreed within one minute. 12 sunrise times were one  *
- *    minute later than the USNO time, and 18 earlier. 19 sunset times  *
- *    were one minute later and 2 were earlier.                         *
- *----------------------------------------------------------------------*/
+// Arduino Power Outage Logger
+// https://github.com/JChristensen/PowerOutageMonitor_SW
+
+// This is an implementation of the Sunrise/Sunset Algorithm found at
+// http://williams.best.vwh.net/sunrise_sunset_algorithm.htm
+// from the Almanac for Computers, 1990
+// Published by Nautical Almanac Office
+// Washington, DC 20392
+// Implemented by Chris Snyder
+// Modified 09Dec2011 by Jack Christensen
+//  - Improved rounding of the returned hour and minute values
+//    (e.g. would sometimes return 16h60m rather than 17h0m)
+//  - Replaced dayNumber() function with ordinalDate() and isLeap().
+//    (dayNumber returned zero as the first day for non-leap years.)
+//
+//    These changes resulted in better agreement with the US Naval
+//    Observatory calculations,
+//    http://aa.usno.navy.mil/data/docs/RS_OneYear.php
+//
+//    For 2011, for my locale, W083°37', N42°56', all sunrise and
+//    sunset times agreed within one minute. 12 sunrise times were one
+//    minute later than the USNO time, and 18 earlier. 19 sunset times
+//    were one minute later and 2 were earlier.
 
 #define OFFICIAL_ZENITH 90.83333
 #define CIVIL_ZENITH 96
