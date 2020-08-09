@@ -125,7 +125,7 @@ void setup()
     lcd.setCursor(0, 0);
     lcd << F(" Power Outage");
     lcd.setCursor(0, 1);
-    lcd << F(" Logger v1.2.3");
+    lcd << F(" Logger v1.2.4");
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
@@ -162,7 +162,7 @@ void setup()
         RTC.calibWrite( (int8_t)RTC.eepromRead(127) );  //set calibration register from stored value
     }
     PCMSK2 |= _BV(PCINT20);                //enable pin change interrupt 20 on PD4
-    PCIFR &= ~_BV(PCIF2);                  //ensure interrupt flag is cleared
+    PCIFR = _BV(PCIF2);                    //ensure interrupt flag is cleared
     PCICR |= _BV(PCIE2);                   //enable pin change interrupts
     RTC.squareWave(SQWAVE_1_HZ);
 
