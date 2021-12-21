@@ -9,10 +9,12 @@
 #include <MCP9800.h>              //http://github.com/JChristensen/MCP9800
 #include <movingAvg.h>            //http://github.com/JChristensen/movingAvg
 #include <Streaming.h>            //http://arduiniana.org/libraries/streaming/
-#include <Time.h>                 //http://www.arduino.cc/playground/Code/Time
+#include <TimeLib.h>              //https://github.com/PaulStoffregen/Time
 #include <Timezone.h>             //http://github.com/JChristensen/Timezone
 #include <Wire.h>                 //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
 #include <util/atomic.h>
+
+#define VERSION "1.2.5"
 
 //pin definitions and other constants
 #define LCD_RS 2                  //16x2 LCD display
@@ -118,6 +120,8 @@ void setup()
     btnDn.begin();
     photoCell.begin();
     avgTemp.begin();
+    Serial.begin(115200);
+    Serial << F( "\n" __FILE__ "\n" __DATE__ " " __TIME__ " Version " VERSION "\n" );
 
     //splash screen
     lcd.begin(16, 2);
@@ -125,7 +129,7 @@ void setup()
     lcd.setCursor(0, 0);
     lcd << F(" Power Outage");
     lcd.setCursor(0, 1);
-    lcd << F(" Logger v1.2.4");
+    lcd << F(" Logger v" VERSION);
     analogWrite(BACKLIGHT_PIN, 255);        //backlight full on
     digitalWrite(ALERT_LED, HIGH);          //lamp test
     delay(MSG_DELAY);
