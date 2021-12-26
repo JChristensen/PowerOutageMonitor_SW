@@ -3,17 +3,17 @@
 // Copyright (C) 2019 by Jack Christensen and licensed under
 // GNU GPL v3.0, https://www.gnu.org/licenses/gpl.html
 
-//log a new outage if one occurred.
-//initializes the log data structure in the RTC SRAM if needed.
+// log a new outage if one occurred.
+// initializes the log data structure in the RTC SRAM if needed.
 uint8_t logOutage()
 {
-uint8_t nOutage;              //number of outages stored in sram
-uint8_t nextOutage;           //address of next outage timestamps in sram
-time_t powerDown, powerUp;    //power outage timestamps
+    uint8_t nOutage;            // number of outages stored in sram
+    uint8_t nextOutage;         // address of next outage timestamps in sram
+    time_t powerDown, powerUp;  // power outage timestamps
 
     if (!logExists()) logInit();
 
-    //if an outage has occurred, record it
+    // if an outage has occurred, record it
     nOutage = RTC.sramRead(NBR_OUTAGES_ADDR);
     if ( RTC.powerFail(&powerDown, &powerUp) ) {
         nextOutage = RTC.sramRead(NEXT_OUTAGE_ADDR);
@@ -23,47 +23,47 @@ time_t powerDown, powerUp;    //power outage timestamps
         if (nextOutage > MAX_OUTAGE_ADDR) nextOutage = FIRST_OUTAGE_ADDR;
         RTC.sramWrite(NEXT_OUTAGE_ADDR, nextOutage);
         if (nOutage < MAX_OUTAGES) RTC.sramWrite(NBR_OUTAGES_ADDR, ++nOutage);
-        digitalWrite(ALERT_LED, HIGH);        //turn on the LED to alert the user
+        digitalWrite(ALERT_LED, HIGH);  // turn on the LED to alert the user
     }
-    return nOutage;    //return number of outages logged
+    return nOutage;     // return number of outages logged
 }
 
-//test whether the log structure is already set up
+// test whether the log structure is already set up
 bool logExists()
 {
-    uint32_t loID;                //lower half of the unique ID read from sram
-    uint8_t appID;                //app ID read from sram
+    uint32_t loID;              // lower half of the unique ID read from sram
+    uint8_t appID;              // app ID read from sram
 
-    RTC.idRead(rtcID.b);          //get the RTC's ID
-    loID = read32(RTC_ID_LO);     //if already initialized, the lower half of the ID is stored at SRAM addr 0x00,
-    appID = RTC.sramRead(APP_ID_ADDR);     //and the app ID (1) is at addr 0x04.
+    RTC.idRead(rtcID.b);        // get the RTC's ID
+    loID = read32(RTC_ID_LO);   // if already initialized, the lower half of the ID is stored at SRAM addr 0x00,
+    appID = RTC.sramRead(APP_ID_ADDR);  // and the app ID (1) is at addr 0x04.
     return (loID == rtcID.lo) && (appID == 1);
 }
 
-//initialize the log structure
+// initialize the log structure
 void logInit()
 {
-    RTC.idRead(rtcID.b);                                //get the RTC's ID
-    write32(RTC_ID_LO, rtcID.lo);                       //least significant half of the RTC unique ID
-    RTC.sramWrite(APP_ID_ADDR, APP_ID);                 //app ID
-    RTC.sramWrite(NBR_OUTAGES_ADDR, 0);                 //number of outages
-    RTC.sramWrite(NEXT_OUTAGE_ADDR, FIRST_OUTAGE_ADDR); //next location for outage times
-    tzIndex = RTC.sramRead(TZ_INDEX_ADDR);              //tz index, init to first in list if not valid value
-    if ( tzIndex >= sizeof(tzNames)/sizeof(tzNames[0]) ) {    //valid value?
-        tzIndex = 0;                                          //no, use first TZ in the list
+    RTC.idRead(rtcID.b);                                // get the RTC's ID
+    write32(RTC_ID_LO, rtcID.lo);                       // least significant half of the RTC unique ID
+    RTC.sramWrite(APP_ID_ADDR, APP_ID);                 // app ID
+    RTC.sramWrite(NBR_OUTAGES_ADDR, 0);                 // number of outages
+    RTC.sramWrite(NEXT_OUTAGE_ADDR, FIRST_OUTAGE_ADDR); // next location for outage times
+    tzIndex = RTC.sramRead(TZ_INDEX_ADDR);              // tz index, init to first in list if not valid value
+    if ( tzIndex >= sizeof(tzNames)/sizeof(tzNames[0]) ) {  // valid value?
+        tzIndex = 0;                                        // no, use first TZ in the list
         RTC.sramWrite(TZ_INDEX_ADDR, tzIndex);
     }
-    tz = timezones[tzIndex];                            //set the tz
+    tz = timezones[tzIndex];                            // set the tz
 
     nOutage = 0;
-    digitalWrite(ALERT_LED, LOW);                       //ensure the LED is off
+    digitalWrite(ALERT_LED, LOW);                       // ensure the LED is off
     lcd.clear();
     lcd << F("Log initialized");
     delay(MSG_DELAY);
     lcd.clear();
 }
 
-//write a time_t or other uint32_t value to sram starting at addr
+// write a time_t or other uint32_t value to sram starting at addr
 void write32(uint8_t addr, uint32_t t)
 {
     union {
@@ -75,7 +75,7 @@ void write32(uint8_t addr, uint32_t t)
     RTC.sramWrite(addr, i.b, 4);
 }
 
-//read a time_t or other uint32_t value from sram starting at addr
+// read a time_t or other uint32_t value from sram starting at addr
 time_t read32(uint8_t addr)
 {
     union {
@@ -87,7 +87,7 @@ time_t read32(uint8_t addr)
     return i.t;
 }
 
-//destroy the logging data structure and log data
+// destroy the logging data structure and log data
 void logClear()
 {
     for (uint8_t i=0; i<MAX_OUTAGE_ADDR + OUTAGE_LENGTH; i++) {

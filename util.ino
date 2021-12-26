@@ -3,9 +3,9 @@
 // Copyright (C) 2019 by Jack Christensen and licensed under
 // GNU GPL v3.0, https://www.gnu.org/licenses/gpl.html
 
-int pc;    //photocell reading (moving avg)
+int pc;     // photocell reading (moving avg)
 
-//print time to Serial or lcd
+// print time to Serial or lcd
 void printTime(Print &p, time_t t)
 {
     printI00(p, hour(t), ':');
@@ -13,7 +13,7 @@ void printTime(Print &p, time_t t)
     printI00(p, second(t), ' ');
 }
 
-//print date to Serial or lcd
+// print date to Serial or lcd
 void printDate(Print &p, time_t t)
 {
     p << dayShortStr(weekday(t)) << ' ';
@@ -21,9 +21,9 @@ void printDate(Print &p, time_t t)
     p << monthShortStr(month(t)) << ' ' << _DEC(year(t));
 }
 
-//Print an integer in "00" format (with leading zero),
-//followed by a delimiter character to Serial or lcd.
-//Input value assumed to be between 0 and 99.
+// Print an integer in "00" format (with leading zero),
+// followed by a delimiter character to Serial or lcd.
+// Input value assumed to be between 0 and 99.
 void printI00(Print &p, int val, char delim)
 {
     if (val < 10) p << '0';
@@ -31,15 +31,15 @@ void printI00(Print &p, int val, char delim)
     return;
 }
 
-//print date, time and number of outages logged to the lcd
+// print date, time and number of outages logged to the lcd
 void lcdDateTime(uint8_t type)
 {
-    lcd.setCursor(0, 0);        //time on first row
+    lcd.setCursor(0, 0);        // time on first row
     printTime(lcd, local);
     if (pcTest) lcd << _DEC(pc);
     else lcd << tcr -> abbrev;
 
-    if (nOutage > 0) {          //followed by number of outages
+    if (nOutage > 0) {          // followed by number of outages
         lcd << " <" << _DEC(nOutage) << '>';
     }
     else if (haveTempSensor) {
@@ -49,21 +49,21 @@ void lcdDateTime(uint8_t type)
     }
     else lcd << F("   ");
 
-    lcd.setCursor(0, 1);        //date on second row
+    lcd.setCursor(0, 1);        // date on second row
     switch (type / 2) {
 
-        default:            //date
+        default:            // date
             printDate(lcd, local);
             break;
 
-        case 1:            //sunrise
+        case 1:             // sunrise
             lcd << F("Sunrise ");
             printI00(lcd, sunriseH, ':');
             printI00(lcd, sunriseM, ' ');
             lcd << F("  ");
             break;
 
-        case 2:            //sunset
+        case 2:             // sunset
             lcd << F("Sunset ");
             printI00(lcd, sunsetH, ':');
             printI00(lcd, sunsetM, ' ');
@@ -72,7 +72,7 @@ void lcdDateTime(uint8_t type)
     }
 }
 
-//adjust lcd brightness
+// adjust lcd brightness
 void brAdjust()
 {
     pc = photoCell.reading(analogRead(PHOTOCELL_PIN));
