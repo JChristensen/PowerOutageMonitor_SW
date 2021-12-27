@@ -4,6 +4,7 @@
 // GNU GPL v3.0, https://www.gnu.org/licenses/gpl.html
 
 #include <JC_Button.h>          // https://github.com/JChristensen/JC_Button
+#include <JC_Sunrise.h>         // https://github.com/JChristensen/JC_Sunrise
 #include <LiquidCrystal.h>      // https://arduino.cc/en/Reference/LiquidCrystal
 #include <MCP79412RTC.h>        // https://github.com/JChristensen/MCP79412RTC
 #include <MCP9800.h>            // https://github.com/JChristensen/MCP9800
@@ -14,7 +15,7 @@
 #include <Wire.h>               // https://arduino.cc/en/Reference/Wire
 #include <util/atomic.h>
 
-#define VERSION "1.2.6"
+#define VERSION "1.2.7"
 
 // pin definitions
 constexpr uint8_t
@@ -60,9 +61,8 @@ constexpr uint8_t
 
 // constants for sunrise
 constexpr float
-    LAT {42.9275},              // latitude
-    LONG {-83.6301},            // longitude
-    OFFICIAL_ZENITH {90.83333};
+    myLat {42.9275},            // my latitude & longitude
+    myLon {-83.6301};
 
 // 8-byte RTC "unique ID" with access to upper and lower halves
 union {
@@ -97,9 +97,10 @@ time_t utc, local, lastUTC, tSet;
 const char *tzNames[] = { "Eastern", "Central", "Mountain", "Pacific", "UTC  " };
 constexpr uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 tmElements_t tmSet;
-uint8_t sunriseH, sunriseM, sunsetH, sunsetM;   // hour and minute for sunrise and sunset
+int sunrise, sunset;        // sunrise and sunset times as integers, HHMM
 
 // object instantiations
+JC_Sunrise sun(myLat, myLon, JC_Sunrise::officialZenith);
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 MCP9800 tempSensor(0);
 movingAvg photoCell(6);
@@ -288,10 +289,7 @@ void loop()
 
                 if (day(local) != lastDay) {    // new day?
                     lastDay = day(local);
-                    int utcOffset = tcr -> offset / 60;
-                    int ord = ordinalDate(local);
-                    calcSunset (ord, LAT, LONG, false, utcOffset, OFFICIAL_ZENITH, sunriseH, sunriseM);
-                    calcSunset (ord, LAT, LONG, true, utcOffset, OFFICIAL_ZENITH, sunsetH, sunsetM);
+                    sun.calculate (local, tcr->offset, sunrise, sunset);
                 }
 
                 if (dispSunTimes) {
@@ -370,7 +368,7 @@ void loop()
         case SET_DAY:
             STATE = SET_HR;
             days = monthDays[tmSet.Month - 1];
-            if (tmSet.Month == 2 && isLeap(yr)) days++;
+            if (tmSet.Month == 2 && sun.isLeap(yr)) days++;
             tmSet.Day = setVal("Day:  ", day(local), 1, days, 9);
             if (STATE == RUN) break;
             break;

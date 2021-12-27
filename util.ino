@@ -58,15 +58,15 @@ void lcdDateTime(uint8_t type)
 
         case 1:             // sunrise
             lcd << F("Sunrise ");
-            printI00(lcd, sunriseH, ':');
-            printI00(lcd, sunriseM, ' ');
+            printI00(lcd, sunrise / 100, ':');
+            printI00(lcd, sunrise % 100, ' ');
             lcd << F("  ");
             break;
 
         case 2:             // sunset
             lcd << F("Sunset ");
-            printI00(lcd, sunsetH, ':');
-            printI00(lcd, sunsetM, ' ');
+            printI00(lcd, sunset / 100, ':');
+            printI00(lcd, sunset % 100, ' ');
             lcd << F("   ");
             break;
     }
@@ -79,4 +79,3 @@ void brAdjust()
     int br = map(constrain(pc, 50, 550), 50, 550, 10, 1);
     analogWrite(BACKLIGHT_PIN, br * 255 / 10);
 }
-
