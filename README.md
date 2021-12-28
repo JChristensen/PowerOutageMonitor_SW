@@ -53,9 +53,9 @@ An optional MCP9800/1/2/3 temperature sensor can be included on the I2C bus. If 
 A circuit schematic and PC board for this project is available at
 https://github.com/JChristensen/PowerOutageMonitor_HW
 
-### Important!
-Instead of using the (perhaps more common) `setSyncProvider()` function in the Time library, the current code uses a 1Hz interrupt from the RTC to keep time. This has become my preferred method, but that was not the case when I designed the power outage logger board!
+### Important note for board version 1.1 and earlier
+Instead of using the (perhaps more common) `setSyncProvider()` function in the Time library, the current code uses a 1Hz interrupt from the RTC to keep time. This has become my preferred method, but that was not the case when I designed the power outage logger board.
 
-Therefore a wire is needed on the back of the board to provide the interrupt signal to the MCU. Connect a wire from the RTC "MFP" pin to the ATmega328P pin 6 (a.k.a PD4 or the Arduino D4 pin) as shown in the photo below.
+Therefore a wire is needed on the back of the board to provide the interrupt signal to the MCU. Connect a wire from the RTC "MFP" pin to the ATmega328P pin 6 (a.k.a PD4 or the Arduino D4 pin) as shown in the photo below. (Board version 1.2 includes this connection; therefore a wire is not necessary.)
 
 ![](https://raw.githubusercontent.com/JChristensen/PowerOutageMonitor_SW/master/extras/bodge-wire.jpg)
