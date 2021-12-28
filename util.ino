@@ -79,3 +79,11 @@ void brAdjust()
     int br = map(constrain(pc, 50, 550), 50, 550, 10, 1);
     analogWrite(BACKLIGHT_PIN, br * 255 / 10);
 }
+
+// Leap years are those divisible by 4, but not those divisible by 100,
+// except that those divisible by 400 *are* leap years.
+// See Kernighan & Ritchie, 2nd edition, section 2.5.
+bool isLeap(int y)
+{
+    return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+}

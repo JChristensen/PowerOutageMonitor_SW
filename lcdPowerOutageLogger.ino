@@ -17,6 +17,9 @@
 
 #define VERSION "1.2.7"
 
+// latitude & longitude for sunrise & sunset times
+constexpr float myLat {45.8171}, myLon {-84.7278};
+
 // pin definitions
 constexpr uint8_t
     LCD_RS {2},             // 16x2 LCD display
@@ -58,11 +61,6 @@ constexpr uint8_t
     NBR_OUTAGES_ADDR {0x05},    // address containing number of outages currently stored in SRAM
     NEXT_OUTAGE_ADDR {0x06},    // address containing pointer to next outage
     TZ_INDEX_ADDR {0x07};       // address containing timezone index
-
-// constants for sunrise
-constexpr float
-    myLat {42.9275},            // my latitude & longitude
-    myLon {-83.6301};
 
 // 8-byte RTC "unique ID" with access to upper and lower halves
 union {
@@ -204,6 +202,11 @@ void setup()
     delay(MSG_DELAY);
     do btnSet.read(); while (btnSet.isPressed());   // user can hold the message by holding the set button
     lcd.clear();
+    lcd << F("LAT ") << _FLOAT(myLat, 4);
+    lcd.setCursor(0, 1);
+    lcd << F("LON ") << _FLOAT(myLon, 4);
+    delay(MSG_DELAY);
+    do btnSet.read(); while (btnSet.isPressed());   // user can hold the message by holding the set button
 
     Wire.beginTransmission(MCP9800_BASE_ADDR);      // check for temperature sensor
     haveTempSensor = (Wire.endTransmission() == 0);
@@ -368,7 +371,7 @@ void loop()
         case SET_DAY:
             STATE = SET_HR;
             days = monthDays[tmSet.Month - 1];
-            if (tmSet.Month == 2 && sun.isLeap(yr)) days++;
+            if (tmSet.Month == 2 && isLeap(yr)) days++;
             tmSet.Day = setVal("Day:  ", day(local), 1, days, 9);
             if (STATE == RUN) break;
             break;
