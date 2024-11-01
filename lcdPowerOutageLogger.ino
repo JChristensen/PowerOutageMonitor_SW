@@ -15,7 +15,7 @@
 #include <Wire.h>               // https://arduino.cc/en/Reference/Wire
 #include <util/atomic.h>
 
-#define VERSION "1.2.7"
+#define VERSION "1.2.8"
 
 // latitude & longitude for sunrise & sunset times
 constexpr float myLat {45.8171}, myLon {-84.7278};
@@ -98,6 +98,7 @@ tmElements_t tmSet;
 int sunrise, sunset;        // sunrise and sunset times as integers, HHMM
 
 // object instantiations
+MCP79412RTC RTC;
 JC_Sunrise sun(myLat, myLon, JC_Sunrise::officialZenith);
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 MCP9800 tempSensor(0);
@@ -128,6 +129,7 @@ void setup()
     btnSet.begin();
     btnUp.begin();
     btnDn.begin();
+    RTC.begin();
     photoCell.begin();
     avgTemp.begin();
     Serial.begin(115200);
@@ -177,7 +179,7 @@ void setup()
     PCMSK2 |= _BV(PCINT20);                 // enable pin change interrupt 20 on PD4
     PCIFR = _BV(PCIF2);                     // ensure interrupt flag is cleared
     PCICR |= _BV(PCIE2);                    // enable pin change interrupts
-    RTC.squareWave(SQWAVE_1_HZ);
+    RTC.squareWave(MCP79412RTC::SQWAVE_1_HZ);
 
     lastUTC = utcNow();
     // wait for the first interrupt
