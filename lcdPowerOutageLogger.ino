@@ -15,7 +15,7 @@
 #include <Wire.h>               // https://arduino.cc/en/Reference/Wire
 #include <util/atomic.h>
 
-#define VERSION "1.2.8"
+#define VERSION "1.2.9"
 
 // latitude & longitude for sunrise & sunset times
 constexpr float myLat {45.8171}, myLon {-84.7278};
@@ -210,10 +210,10 @@ void setup()
     delay(MSG_DELAY);
     do btnSet.read(); while (btnSet.isPressed());   // user can hold the message by holding the set button
 
-    Wire.beginTransmission(MCP9800_BASE_ADDR);      // check for temperature sensor
+    Wire.beginTransmission(MCP9800::BASE_ADDR);     // check for temperature sensor
     haveTempSensor = (Wire.endTransmission() == 0);
     if (haveTempSensor) {                           // take an initial reading
-        avgTemp.reading( tempSensor.readTempF10(AMBIENT) );
+        avgTemp.reading( tempSensor.readTempF10(MCP9800::AMBIENT) );
     }
 
     nOutage = logOutage();  // log an outage if one occurred
@@ -243,8 +243,7 @@ uint8_t STATE;      // current state machine state
 
 void loop()
 {
-    int yr, days;
-    int calib, newCalib;
+    int yr{}, days{}, calib{}, newCalib{};
     static bool dispSunTimes;   // 0=date only on second line, 1=alternate date, sunrise, sunset
     static uint8_t dispType;    // 0,1=date, 2,3=sunrise, 4,5=sunset
     static int lastDay;         // used to know when the time has changed to a new day
@@ -306,7 +305,7 @@ void loop()
                 }
 
                 if ( haveTempSensor && (second(utc) % 10 == 0) ) {  // read temperature every 10 sec
-                    avgTemp.reading( tempSensor.readTempF10(AMBIENT) );
+                    avgTemp.reading( tempSensor.readTempF10(MCP9800::AMBIENT) );
                 }
             }
             break;
